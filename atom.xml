@@ -6,7 +6,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="http://yoursite.com/"/>
-  <updated>2018-04-29T13:50:35.349Z</updated>
+  <updated>2018-06-05T15:07:31.163Z</updated>
   <id>http://yoursite.com/</id>
   
   <author>
@@ -15,6 +15,31 @@
   </author>
   
   <generator uri="http://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>C++11高精度计时器</title>
+    <link href="http://yoursite.com/2018/06/05/cpp-timer/"/>
+    <id>http://yoursite.com/2018/06/05/cpp-timer/</id>
+    <published>2018-06-05T14:26:41.000Z</published>
+    <updated>2018-06-05T15:07:31.163Z</updated>
+    
+    <content type="html"><![CDATA[<p>做图像处理算法时，免不了要测量函数的运行时间。以前我都是使用OpenCV的计时函数<code>cv::getTickCount()</code>和<code>cv::getTickFrequency()</code>，但是这样一来，在不使用OpenCV的项目中就没法用了。幸好C++11增加了<code>std::chrono</code>库，可以很方便地实现跨平台的时间测量。于是我封装了一个简单的计时器类，这样只要将其简单地添加到项目中，就可以直接使用了。此计时器单位为毫秒，但可以精确到微秒级。</p><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;iostream&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;chrono&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Timer</span></span></span><br><span class="line"><span class="class">&#123;</span></span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">Timer()</span><br><span class="line">: t1(res::zero())</span><br><span class="line">, t2(res::zero())</span><br><span class="line">&#123;</span><br><span class="line">tic();</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">~Timer()</span><br><span class="line">&#123;&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">tic</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">t1 = clock::now();</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">toc</span><span class="params">(<span class="keyword">const</span> <span class="keyword">char</span>* str)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">t2 = clock::now();</span><br><span class="line"><span class="built_in">std</span>::<span class="built_in">cout</span> &lt;&lt; str &lt;&lt; <span class="string">" time: "</span> </span><br><span class="line">&lt;&lt; <span class="built_in">std</span>::chrono::duration_cast&lt;res&gt;(t2 - t1).count() / <span class="number">1e3</span> &lt;&lt; <span class="string">"ms."</span> &lt;&lt; <span class="built_in">std</span>::<span class="built_in">endl</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">private</span>:</span><br><span class="line"><span class="keyword">typedef</span> <span class="built_in">std</span>::chrono::high_resolution_clock clock;</span><br><span class="line"><span class="keyword">typedef</span> <span class="built_in">std</span>::chrono::microseconds res;</span><br><span class="line"></span><br><span class="line">clock::time_point t1;</span><br><span class="line">clock::time_point t2;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure><p>测试代码如下：</p><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">Timer timer;</span><br><span class="line"><span class="built_in">std</span>::<span class="built_in">cout</span> &lt;&lt; <span class="string">"1"</span> &lt;&lt; <span class="built_in">std</span>::<span class="built_in">endl</span>;</span><br><span class="line">timer.toc(<span class="string">"output 1"</span>);</span><br><span class="line"></span><br><span class="line">timer.tic();</span><br><span class="line"><span class="built_in">std</span>::<span class="built_in">cout</span> &lt;&lt; <span class="string">"2"</span> &lt;&lt; <span class="built_in">std</span>::<span class="built_in">endl</span>;</span><br><span class="line">timer.toc(<span class="string">"output 2"</span>);</span><br><span class="line"></span><br><span class="line">system(<span class="string">"pause"</span>);</span><br><span class="line"></span><br><span class="line"><span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure><p>输出如下：</p><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="number">1</span></span><br><span class="line">output <span class="number">1</span> time: <span class="number">0.26</span>ms.</span><br><span class="line"><span class="number">2</span></span><br><span class="line">output <span class="number">2</span> time: <span class="number">0.039</span>ms.</span><br><span class="line">请按任意键继续. . .</span><br></pre></td></tr></table></figure>]]></content>
+    
+    <summary type="html">
+    
+      
+      
+        &lt;p&gt;做图像处理算法时，免不了要测量函数的运行时间。以前我都是使用OpenCV的计时函数&lt;code&gt;cv::getTickCount()&lt;/code&gt;和&lt;code&gt;cv::getTickFrequency()&lt;/code&gt;，但是这样一来，在不使用OpenCV的项目中就没法用了。幸
+      
+    
+    </summary>
+    
+      <category term="C++" scheme="http://yoursite.com/categories/C/"/>
+    
+    
+      <category term="C++" scheme="http://yoursite.com/tags/C/"/>
+    
+  </entry>
   
   <entry>
     <title>提取图像细节的两种方法</title>
