@@ -6,7 +6,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="http://yoursite.com/"/>
-  <updated>2018-06-07T15:36:13.677Z</updated>
+  <updated>2018-06-07T16:10:59.518Z</updated>
   <id>http://yoursite.com/</id>
   
   <author>
@@ -15,6 +15,34 @@
   </author>
   
   <generator uri="http://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>OpenCL优化小技巧：预创建所有Kernel</title>
+    <link href="http://yoursite.com/2018/06/07/opencl-trick-precreate-all-kernels/"/>
+    <id>http://yoursite.com/2018/06/07/opencl-trick-precreate-all-kernels/</id>
+    <published>2018-06-07T15:48:43.000Z</published>
+    <updated>2018-06-07T16:10:59.518Z</updated>
+    
+    <content type="html"><![CDATA[<p>最近做了一些图像处理的算法，跑在高通的开发板上，其中使用了OpenCL进行加速。在此过程中，也总结了几个加速的小技巧。今天就来谈其中一个不太有用的小技巧：预创建所有Kernel。</p><p>第一次进行OpenCL加速时，我注意到，创建<code>cl_kernel</code>时，会耗费几毫秒到二十几毫秒的时间。如果算法中需要创建几十个<code>cl_kernel</code>，那花费的时间也有几百毫秒了。这让人很难接受。</p><p>后来我又注意到，对于同一个Kernel，只有第一次创建时才会花费那么多时间，后续再次创建(无论前面创建的是否已经释放掉)所花费的时间将会大大减少，几乎可以忽略不计。那么机会就来了：我们可以在初始化时预先创建好所有Kernel，再全部释放掉。然后在实际的处理算法中，和平时一样使用<code>clCreateKernel()</code>和<code>clReleaseKernel()</code>，同时也不用担心创建Kernel所花费的额外时间了。</p><p>为什么我说这个小技巧不太有用呢？因为只有使用源码，也就是<code>clCreateProgramWithSource()</code>创建program时，才会出现创建Kernel耗时严重的现象。而一般发布出来的算法都会使用二进制文件，也就是<code>clCreateProgramWithBinary()</code>，在保存为二进制时，一定已经先创建所有Kernel了，耗时问题也就不存在了。</p><p>但是在加速未完成之前，我们一般还是会直接使用源码来调试。此时预创建所有Kernel，可以排除掉创建Kernel的时间，使得对算法的最终运行时间估计更准确。所以，这个小技巧还是有一点用的:)。</p>]]></content>
+    
+    <summary type="html">
+    
+      
+      
+        &lt;p&gt;最近做了一些图像处理的算法，跑在高通的开发板上，其中使用了OpenCL进行加速。在此过程中，也总结了几个加速的小技巧。今天就来谈其中一个不太有用的小技巧：预创建所有Kernel。&lt;/p&gt;
+&lt;p&gt;第一次进行OpenCL加速时，我注意到，创建&lt;code&gt;cl_kernel&lt;/c
+      
+    
+    </summary>
+    
+      <category term="OpenCL" scheme="http://yoursite.com/categories/OpenCL/"/>
+    
+    
+      <category term="OpenCL" scheme="http://yoursite.com/tags/OpenCL/"/>
+    
+      <category term="trick" scheme="http://yoursite.com/tags/trick/"/>
+    
+  </entry>
   
   <entry>
     <title>OpenCL clCreateBuffer占用太多时间</title>
