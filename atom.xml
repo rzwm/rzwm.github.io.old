@@ -6,7 +6,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="http://yoursite.com/"/>
-  <updated>2018-06-07T16:10:59.518Z</updated>
+  <updated>2018-06-08T16:04:12.848Z</updated>
   <id>http://yoursite.com/</id>
   
   <author>
@@ -15,6 +15,32 @@
   </author>
   
   <generator uri="http://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>OpenCV两个Mat相减的隐藏秘密</title>
+    <link href="http://yoursite.com/2018/06/08/opencv-abs-vs-absdiff/"/>
+    <id>http://yoursite.com/2018/06/08/opencv-abs-vs-absdiff/</id>
+    <published>2018-06-08T15:01:32.000Z</published>
+    <updated>2018-06-08T16:04:12.848Z</updated>
+    
+    <content type="html"><![CDATA[<h2 id="起因"><a href="#起因" class="headerlink" title="起因"></a>起因</h2><p>今天在看同事写的代码时，发现一个“错误”：<br>他的原意是实现以下功能：</p><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">cv::Mat absDiff;</span><br><span class="line">cv::absdiff(mat1, mat2, absDiff);</span><br></pre></td></tr></table></figure><p>其中<code>mat1</code>和<code>mat2</code>均为<code>CV_8UC1</code>类型。</p><p>但是可能是一时没想起这个函数，于是他写成了这个样子：</p><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">cv::Mat absDiff = cv::<span class="built_in">abs</span>(mat1 - mat2);</span><br></pre></td></tr></table></figure><h2 id="问题"><a href="#问题" class="headerlink" title="问题"></a>问题</h2><p>于是我认真地告诉他，这样做是错的。假设<code>mat1</code>为<code>[0]</code>，<code>mat2</code>为<code>[255]</code>，那么<code>mat1 - mat2</code>将会得到<code>[0]</code>，因为<code>cv::saturate_cast&lt;uchar&gt;(0 - 255) == 0</code>。则<code>cv::abs([0])</code>自然就是<code>[0]</code>，而他的期望是得到<code>[255]</code>。</p><p>并且我写出如下代码证明他是错的：</p><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">cv::Mat diff = mat1 - mat;</span><br></pre></td></tr></table></figure><p>结果<code>diff</code>确实是<code>[0]</code>。那么<code>cv::Mat absDiff = cv::abs(diff);</code>肯定就是<code>[0]</code>了。</p><p>但是他坚持让我用<code>cv::Mat absDiff = cv::abs(mat1 - mat2);</code>测试。结果。。。。<code>absDiff</code>竟然真的是<code>[255]</code>！我当时就震惊了，同时隐隐有一种感觉：这其中一定隐藏着一个天大的秘密。</p><h2 id="秘密"><a href="#秘密" class="headerlink" title="秘密"></a>秘密</h2><p>于是我进入调试模式，认真观察每一步，终于明白了玄机所在。</p><h3 id="为什么我得到了-0"><a href="#为什么我得到了-0" class="headerlink" title="为什么我得到了[0]"></a>为什么我得到了<code>[0]</code></h3><p>先来分析我的测试代码：</p><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">cv::Mat diff = mat1 - mat;</span><br></pre></td></tr></table></figure><p>在我以前的观念里，<code>mat1 - mat</code>是两个<code>cv::Mat</code>互相作用，实际上调用的是<code>cv::subtract()</code>。但是事实上，<code>mat1 - mat2</code>调用的是以下函数：</p><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">CV_EXPORTS MatExpr <span class="keyword">operator</span> - (<span class="keyword">const</span> Mat&amp; a, <span class="keyword">const</span> Mat&amp; b);</span><br><span class="line"></span><br><span class="line">MatExpr <span class="keyword">operator</span> - (<span class="keyword">const</span> Mat&amp; a, <span class="keyword">const</span> Mat&amp; b)</span><br><span class="line">&#123;</span><br><span class="line">    MatExpr e;</span><br><span class="line">    MatOp_AddEx::makeExpr(e, a, b, <span class="number">1</span>, <span class="number">-1</span>);</span><br><span class="line">    <span class="keyword">return</span> e;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure><p>可以看到，<code>mat1 - mat2</code>实际上是生成了一个<code>MatExpr</code>对象。在生成过程中，并没有进行实际的相减操作，而只是保存了<code>a</code>和<code>b</code>，并记录了它们之间期望进行的操作：相减。实际的相减操作是在类型转换时进行的：</p><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//cv::Mat diff = mat1 - mat; // 在这里调用了operator Mat()</span></span><br><span class="line"></span><br><span class="line">MatExpr::<span class="function"><span class="keyword">operator</span> <span class="title">Mat</span><span class="params">()</span> <span class="keyword">const</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    Mat m;</span><br><span class="line">    op-&gt;assign(*<span class="keyword">this</span>, m);</span><br><span class="line">    <span class="keyword">return</span> m;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure><p>在<code>assign</code>中最终调用了<code>cv::subtract()</code>。所以<code>mat1 - mat2</code>得到了<code>[0]</code>。</p><h3 id="为什么同事得到了-255"><a href="#为什么同事得到了-255" class="headerlink" title="为什么同事得到了[255]"></a>为什么同事得到了<code>[255]</code></h3><p>再来分析我同事的测试代码：</p><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">cv::Mat absDiff = cv::<span class="built_in">abs</span>(mat1 - mat2);</span><br></pre></td></tr></table></figure><p>从上面我们知道，<code>mat1 - mat2</code>生成了一个<code>MatExpr</code>对象。而<code>cv::abs()</code>调用的是</p><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="function">MatExpr <span class="title">abs</span><span class="params">(<span class="keyword">const</span> MatExpr&amp; e)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    CV_INSTRUMENT_REGION()</span><br><span class="line"></span><br><span class="line">    MatExpr en;</span><br><span class="line">    e.op-&gt;<span class="built_in">abs</span>(e, en);</span><br><span class="line">    <span class="keyword">return</span> en;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure><p>这个函数再次生成了一个<code>MatExpr</code>对象，其中记录了操作对象<code>e</code>和期望进行的操作：取绝对值，而并没有进行实际的运算。然后同上面一样，它是在赋值给<code>absDiff</code>时调用<code>operator Mat()</code>进行运算的。神奇的地方来了，它把前面的相减操作与这里的取绝对值操作组合到了一起(而不是依次运算)，最终调用的正是<code>cv::absdiff()</code>！</p><p>于是谜底揭开了，一切的原因都是因为<code>MatExpr</code>这个中间对象实现了延迟运算和操作组合。</p><h2 id="感叹"><a href="#感叹" class="headerlink" title="感叹"></a>感叹</h2><p>我还是太年轻！</p>]]></content>
+    
+    <summary type="html">
+    
+      
+      
+        &lt;h2 id=&quot;起因&quot;&gt;&lt;a href=&quot;#起因&quot; class=&quot;headerlink&quot; title=&quot;起因&quot;&gt;&lt;/a&gt;起因&lt;/h2&gt;&lt;p&gt;今天在看同事写的代码时，发现一个“错误”：&lt;br&gt;他的原意是实现以下功能：&lt;/p&gt;
+&lt;figure class=&quot;highlight cpp
+      
+    
+    </summary>
+    
+      <category term="图像处理" scheme="http://yoursite.com/categories/%E5%9B%BE%E5%83%8F%E5%A4%84%E7%90%86/"/>
+    
+    
+      <category term="OpenCV" scheme="http://yoursite.com/tags/OpenCV/"/>
+    
+  </entry>
   
   <entry>
     <title>OpenCL优化小技巧：预创建所有Kernel</title>

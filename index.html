@@ -158,6 +158,58 @@
     <ul class="post-list">
     
         <li class="post-list-item fade">
+            <article id="post-opencv-abs-vs-absdiff"
+  class="article-card article-type-post" itemprop="blogPost">
+
+    <div class="post-meta">
+        <time class="post-time" title="2018-06-08 23:01:32" datetime="2018-06-08T15:01:32.000Z"  itemprop="datePublished">2018-06-08</time>
+
+        
+	<ul class="article-category-list"><li class="article-category-list-item"><a class="article-category-list-link" href="/categories/图像处理/">图像处理</a></li></ul>
+
+
+
+    </div>
+
+    
+
+
+  
+    <h3 class="post-title" itemprop="name">
+      <a class="post-title-link" href="/2018/06/08/opencv-abs-vs-absdiff/">OpenCV两个Mat相减的隐藏秘密</a>
+    </h3>
+  
+
+
+
+
+    <div class="post-content" id="post-content" itemprop="postContent">
+
+    
+        起因今天在看同事写的代码时，发现一个“错误”：他的原意是实现以下功能：
+12cv::Mat absDiff;cv::absdiff(mat1, mat2, absDiff);
+其中mat1和mat2均为CV_8UC1类型。
+但是可能是一时没想起这个函数，于是他写成了这个样子：
+1cv::Mat absDiff = cv::abs(mat1 - mat2);
+问题于是我认真地告诉他，这样做是错...
+    
+
+        <a href="/2018/06/08/opencv-abs-vs-absdiff/" class="post-more waves-effect waves-button">
+            阅读全文…
+        </a>
+    </div>
+    
+    <div class="post-footer">
+        
+	<ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/OpenCV/">OpenCV</a></li></ul>
+
+    </div>
+    
+</article>
+
+        </li>
+    
+        <li class="post-list-item fade">
             <article id="post-opencl-trick-precreate-all-kernels"
   class="article-card article-type-post" itemprop="blogPost">
 
