@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html>
+<head>
+    
+
+    
+
+    
+
+
+
+    <meta charset="utf-8">
+    
+    
+    
+    
+    <title>基于快速去雾的图像亮度增强方法 | 天律界 | 精诚所至，金石为开</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    
+    <meta name="theme-color" content="#3F51B5">
+    
+    
+    <meta name="keywords" content="image-processing">
+    <meta name="description" content="起因最近在做一个图像处理的算法，因为图像太暗，所以需要对图像的亮度进行增强(不考虑噪声的放大)。尝试了网上搜索到的各种方法后，发现它们存在两个问题：容易造成原本较亮的地方过曝，并且参数不好设置。尝试了一些暗光增强的paper的算法后，发现它们又太慢了。这时我想到曾经看过的一篇paper说过，有一种亮度增强的算法是基于去雾来做的，步骤很简单：  将RGB图像取反(关于图像取反，请参考我的这篇博客Op">
+<meta name="keywords" content="image-processing">
+<meta property="og:type" content="article">
+<meta property="og:title" content="基于快速去雾的图像亮度增强方法">
+<meta property="og:url" content="http://yoursite.com/2018/06/09/image-brightness-enhancement-based-on-haze-removal/index.html">
+<meta property="og:site_name" content="天律界">
+<meta property="og:description" content="起因最近在做一个图像处理的算法，因为图像太暗，所以需要对图像的亮度进行增强(不考虑噪声的放大)。尝试了网上搜索到的各种方法后，发现它们存在两个问题：容易造成原本较亮的地方过曝，并且参数不好设置。尝试了一些暗光增强的paper的算法后，发现它们又太慢了。这时我想到曾经看过的一篇paper说过，有一种亮度增强的算法是基于去雾来做的，步骤很简单：  将RGB图像取反(关于图像取反，请参考我的这篇博客Op">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="http://o96d382wn.bkt.clouddn.com/image-brightness-enhancement-based-on-haze-removal-algorithm.png">
+<meta property="og:updated_time" content="2018-06-09T15:04:32.767Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="基于快速去雾的图像亮度增强方法">
+<meta name="twitter:description" content="起因最近在做一个图像处理的算法，因为图像太暗，所以需要对图像的亮度进行增强(不考虑噪声的放大)。尝试了网上搜索到的各种方法后，发现它们存在两个问题：容易造成原本较亮的地方过曝，并且参数不好设置。尝试了一些暗光增强的paper的算法后，发现它们又太慢了。这时我想到曾经看过的一篇paper说过，有一种亮度增强的算法是基于去雾来做的，步骤很简单：  将RGB图像取反(关于图像取反，请参考我的这篇博客Op">
+<meta name="twitter:image" content="http://o96d382wn.bkt.clouddn.com/image-brightness-enhancement-based-on-haze-removal-algorithm.png">
+    
+        <link rel="alternate" type="application/atom+xml" title="天律界" href="/atom.xml">
+    
+    <link rel="shortcut icon" href="/favicon.ico">
+    <link rel="stylesheet" href="//unpkg.com/hexo-theme-material-indigo@latest/css/style.css">
+    <script>window.lazyScripts=[]</script>
+
+    <!-- custom head -->
+    
+
+</head>
+
+<body>
+    <div id="loading" class="active"></div>
+
+    <aside id="menu" class="hide" >
+  <div class="inner flex-row-vertical">
+    <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="menu-off">
+        <i class="icon icon-lg icon-close"></i>
+    </a>
+    <div class="brand-wrap" style="background-image:url(/img/brand.jpg)">
+      <div class="brand">
+        <a href="/" class="avatar waves-effect waves-circle waves-light">
+          <img src="/img/avatar.jpg">
+        </a>
+        <hgroup class="introduce">
+          <h5 class="nickname">天律界中子</h5>
+          <a href="mailto:279428101@qq.com" title="279428101@qq.com" class="mail">279428101@qq.com</a>
+        </hgroup>
+      </div>
+    </div>
+    <div class="scroll-wrap flex-col">
+      <ul class="nav">
+        
+            <li class="waves-block waves-effect">
+              <a href="/"  >
+                <i class="icon icon-lg icon-home"></i>
+                主页
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/archives"  >
+                <i class="icon icon-lg icon-archives"></i>
+                Archives
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/tags"  >
+                <i class="icon icon-lg icon-tags"></i>
+                Tags
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/categories"  >
+                <i class="icon icon-lg icon-th-list"></i>
+                Categories
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="https://github.com/rzwm" target="_blank" >
+                <i class="icon icon-lg icon-github"></i>
+                Github
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/About"  >
+                <i class="icon icon-lg icon-link"></i>
+                About me
+              </a>
+            </li>
+        
+      </ul>
+    </div>
+  </div>
+</aside>
+
+    <main id="main">
+        <header class="top-header" id="header">
+    <div class="flex-row">
+        <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light on" id="menu-toggle">
+          <i class="icon icon-lg icon-navicon"></i>
+        </a>
+        <div class="flex-col header-title ellipsis">基于快速去雾的图像亮度增强方法</div>
+        
+        <div class="search-wrap" id="search-wrap">
+            <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="back">
+                <i class="icon icon-lg icon-chevron-left"></i>
+            </a>
+            <input type="text" id="key" class="search-input" autocomplete="off" placeholder="输入感兴趣的关键字">
+            <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="search">
+                <i class="icon icon-lg icon-search"></i>
+            </a>
+        </div>
+        
+        
+        <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="menuShare">
+            <i class="icon icon-lg icon-share-alt"></i>
+        </a>
+        
+    </div>
+</header>
+<header class="content-header post-header">
+
+    <div class="container fade-scale">
+        <h1 class="title">基于快速去雾的图像亮度增强方法</h1>
+        <h5 class="subtitle">
+            
+                <time datetime="2018-06-09T13:37:09.000Z" itemprop="datePublished" class="page-time">
+  2018-06-09
+</time>
+
+
+	<ul class="article-category-list"><li class="article-category-list-item"><a class="article-category-list-link" href="/categories/图像处理/">图像处理</a></li></ul>
+
+            
+        </h5>
+    </div>
+
+    
+
+
+</header>
+
+
+<div class="container body-wrap">
+    
+    <aside class="post-widget">
+        <nav class="post-toc-wrap post-toc-shrink" id="post-toc">
+            <h4>TOC</h4>
+            <ol class="post-toc"><li class="post-toc-item post-toc-level-2"><a class="post-toc-link" href="#起因"><span class="post-toc-number">1.</span> <span class="post-toc-text">起因</span></a></li><li class="post-toc-item post-toc-level-2"><a class="post-toc-link" href="#快速去雾算法"><span class="post-toc-number">2.</span> <span class="post-toc-text">快速去雾算法</span></a></li><li class="post-toc-item post-toc-level-2"><a class="post-toc-link" href="#源码解释"><span class="post-toc-number">3.</span> <span class="post-toc-text">源码解释</span></a><ol class="post-toc-child"><li class="post-toc-item post-toc-level-3"><a class="post-toc-link" href="#运行速度"><span class="post-toc-number">3.1.</span> <span class="post-toc-text">运行速度</span></a></li><li class="post-toc-item post-toc-level-3"><a class="post-toc-link" href="#参数调整"><span class="post-toc-number">3.2.</span> <span class="post-toc-text">参数调整</span></a></li></ol></li></ol>
+        </nav>
+    </aside>
+
+
+<article id="post-image-brightness-enhancement-based-on-haze-removal"
+  class="post-article article-type-post fade" itemprop="blogPost">
+
+    <div class="post-card">
+        <h1 class="post-card-title">基于快速去雾的图像亮度增强方法</h1>
+        <div class="post-meta">
+            <time class="post-time" title="2018-06-09 21:37:09" datetime="2018-06-09T13:37:09.000Z"  itemprop="datePublished">2018-06-09</time>
+
+            
+	<ul class="article-category-list"><li class="article-category-list-item"><a class="article-category-list-link" href="/categories/图像处理/">图像处理</a></li></ul>
+
+
+
+            
+<span id="busuanzi_container_page_pv" title="文章总阅读量" style='display:none'>
+    <i class="icon icon-eye icon-pr"></i><span id="busuanzi_value_page_pv"></span>
+</span>
+
+
+        </div>
+        <div class="post-content" id="post-content" itemprop="postContent">
+            <h2 id="起因"><a href="#起因" class="headerlink" title="起因"></a>起因</h2><p>最近在做一个图像处理的算法，因为图像太暗，所以需要对图像的亮度进行增强(不考虑噪声的放大)。尝试了网上搜索到的各种方法后，发现它们存在两个问题：容易造成原本较亮的地方过曝，并且参数不好设置。尝试了一些暗光增强的paper的算法后，发现它们又太慢了。这时我想到曾经看过的一篇paper说过，有一种亮度增强的算法是基于去雾来做的，步骤很简单：</p>
+<ol>
+<li>将RGB图像取反(关于图像取反，请参考我的这篇博客<a href="http://xuzhongzhang.cn/2018/06/07/opencv-image-invert/" target="_blank" rel="noopener">OpenCV图像取反</a>)；</li>
+<li>对取反后的图像进行去雾；</li>
+<li>将去雾后的图像取反。</li>
+</ol>
+<p>其背后的理念是：暗光图像取反后，原本接近黑色的像素就会变成接近白色，整张图像就会类似于有雾的图像。于是对这样的图像进行去雾后，白色的像素就变暗了，再反色后，像素就变亮了！没毛病！</p>
+<h2 id="快速去雾算法"><a href="#快速去雾算法" class="headerlink" title="快速去雾算法"></a>快速去雾算法</h2><p>说起去雾，恐怕大多数人的第一反应就是鼎鼎大名的何恺明博士的暗通道先验去雾算法。我的第一反应也是这个。但是在了解之后，我发现这种方法速度太慢了，难以应用到我的算法中。于是我开始搜索快速的去雾算法，很快找到了这篇论文<a href="https://wenku.baidu.com/view/63e8cf1e10661ed9ad51f3ea.html" target="_blank" rel="noopener">《基于单幅图像的快速去雾算法》刘倩, 陈茂银, 周东华</a>(这篇文章中也提到了暗通道先验去雾算法的速度太慢)，速度很快，只有O(1)复杂度。</p>
+<p>这篇论文我并没有仔细看，而是秉承“拿来主义”的精神，直接根据论文提供的算法流程实现了代码。原因是它的算法流程太简单了，在轻松地实现了代码之后，就没有再看的欲望了~这里贴一下它的算法流程，你们自己看：<br><figure class="image-bubble">
+                <div class="img-lightbox">
+                    <div class="overlay"></div>
+                    <img src="http://o96d382wn.bkt.clouddn.com/image-brightness-enhancement-based-on-haze-removal-algorithm.png" alt="算法流程" title="">
+                </div>
+                <div class="image-caption">算法流程</div>
+            </figure></p>
+<h2 id="源码解释"><a href="#源码解释" class="headerlink" title="源码解释"></a>源码解释</h2><p>我把实现的代码放到了GitHub：<a href="https://github.com/rzwm/IBEABFHR" target="_blank" rel="noopener">IBEABFHR</a>(原谅我这个取名废)，请点进去看效果图，我这里就不重复放了。我感觉效果还是很好的，暗处的亮度增强得很好，亮处虽然有过曝，但并不是很明显。而且控制亮度的参数很好调整，只要随便找一张图像调整好参数，就可以应用于所有图片了。</p>
+<h3 id="运行速度"><a href="#运行速度" class="headerlink" title="运行速度"></a>运行速度</h3><p>代码是用OpenCV实现的，同时支持彩色图像和灰度图像。在我的电脑上(CPU: E3-1230 v3)测试，运行100次取平均值，速度如下：</p>
+<table>
+<thead>
+<tr>
+<th>分辨率</th>
+<th>类型</th>
+<th>时间</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1024x768</td>
+<td>灰度图像</td>
+<td>8.77ms</td>
+</tr>
+<tr>
+<td>1024x768</td>
+<td>彩色图像</td>
+<td>16.24ms</td>
+</tr>
+<tr>
+<td>1920x1080</td>
+<td>灰度图像</td>
+<td>22.61ms</td>
+</tr>
+<tr>
+<td>1920x1080</td>
+<td>彩色图像</td>
+<td>40.60ms</td>
+</tr>
+<tr>
+<td>4160x2340</td>
+<td>灰度图像</td>
+<td>104.57ms</td>
+</tr>
+<tr>
+<td>4160x2340</td>
+<td>彩色图像</td>
+<td>186.14ms</td>
+</tr>
+</tbody>
+</table>
+<p>但是如果你只使用我的算法一次，可能速度要慢得多，原因是第一次取反操作因为未知原因耗费了额外的时间。关于这点，请参看我的这篇博客<a href="http://xuzhongzhang.cn/2018/06/07/opencv-image-invert/" target="_blank" rel="noopener">OpenCV图像取反</a>。</p>
+<h3 id="参数调整"><a href="#参数调整" class="headerlink" title="参数调整"></a>参数调整</h3><p>这个算法总共有两个可变参数。一个是在step 3中进行均值滤波时的所用的滤波半径<code>radius</code>，另一个是在step 5中用的<code>ρ</code>。</p>
+<p><code>radius</code>参数在某些图像上可以控制对比度，数值越大，对比度越强，但在某些图像上不起作用。这个参数取值不能太小，否则增强后的图像会出现光晕。一般不应小于50或者图像宽度和高度最大值的的1/20。</p>
+<p><code>ρ</code>控制图像增强的亮度，数值越大，增强后的图像越亮。一般的取值范围为[1.0, 2.0]。在我的实现中，我使用了一种简单选择的策略，请参看源代码，仅供参考。</p>
+<p>关于参数的效果及设置，我参考了这篇博客<a href="https://www.cnblogs.com/Imageshop/p/3410279.html" target="_blank" rel="noopener">一种可实时处理 O(1)复杂度图像去雾算法的实现</a>，在此进行感谢。</p>
+
+        </div>
+
+        <blockquote class="post-copyright">
+    
+    <div class="content">
+        
+<span class="post-time">
+    最后更新时间：<time datetime="2018-06-09T15:04:32.767Z" itemprop="dateUpdated">2018-06-09 23:04:32</time>
+</span><br>
+
+
+        
+        谢谢阅读！如果觉得我的博客帮到了你，请点击下方的打赏支持我~
+        
+    </div>
+    
+    <footer>
+        <a href="http://yoursite.com">
+            <img src="/img/avatar.jpg" alt="天律界中子">
+            天律界中子
+        </a>
+    </footer>
+</blockquote>
+
+        
+<div class="page-reward">
+    <a id="rewardBtn" href="javascript:;" class="page-reward-btn waves-effect waves-circle waves-light">赏</a>
+</div>
+
+
+
+        <div class="post-footer">
+            
+	<ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/image-processing/">image-processing</a></li></ul>
+
+
+            
+<div class="page-share-wrap">
+    
+
+<div class="page-share" id="pageShare">
+    <ul class="reset share-icons">
+      <li>
+        <a class="weibo share-sns" target="_blank" href="http://service.weibo.com/share/share.php?url=http://yoursite.com/2018/06/09/image-brightness-enhancement-based-on-haze-removal/&title=《基于快速去雾的图像亮度增强方法》 — 天律界&pic=http://yoursite.com/img/avatar.jpg" data-title="微博">
+          <i class="icon icon-weibo"></i>
+        </a>
+      </li>
+      <li>
+        <a class="weixin share-sns wxFab" href="javascript:;" data-title="微信">
+          <i class="icon icon-weixin"></i>
+        </a>
+      </li>
+      <li>
+        <a class="qq share-sns" target="_blank" href="http://connect.qq.com/widget/shareqq/index.html?url=http://yoursite.com/2018/06/09/image-brightness-enhancement-based-on-haze-removal/&title=《基于快速去雾的图像亮度增强方法》 — 天律界&source=天律界中子的Github page" data-title=" QQ">
+          <i class="icon icon-qq"></i>
+        </a>
+      </li>
+      <li>
+        <a class="facebook share-sns" target="_blank" href="https://www.facebook.com/sharer/sharer.php?u=http://yoursite.com/2018/06/09/image-brightness-enhancement-based-on-haze-removal/" data-title=" Facebook">
+          <i class="icon icon-facebook"></i>
+        </a>
+      </li>
+      <li>
+        <a class="twitter share-sns" target="_blank" href="https://twitter.com/intent/tweet?text=《基于快速去雾的图像亮度增强方法》 — 天律界&url=http://yoursite.com/2018/06/09/image-brightness-enhancement-based-on-haze-removal/&via=http://yoursite.com" data-title=" Twitter">
+          <i class="icon icon-twitter"></i>
+        </a>
+      </li>
+      <li>
+        <a class="google share-sns" target="_blank" href="https://plus.google.com/share?url=http://yoursite.com/2018/06/09/image-brightness-enhancement-based-on-haze-removal/" data-title=" Google+">
+          <i class="icon icon-google-plus"></i>
+        </a>
+      </li>
+    </ul>
+ </div>
+
+
+
+    <a href="javascript:;" id="shareFab" class="page-share-fab waves-effect waves-circle">
+        <i class="icon icon-share-alt icon-lg"></i>
+    </a>
+</div>
+
+
+
+        </div>
+    </div>
+
+    
+<nav class="post-nav flex-row flex-justify-between flex-row-reverse">
+  
+
+  
+    <div class="waves-block waves-effect next">
+      <a href="/2018/06/08/opencv-abs-vs-absdiff/" id="post-next" class="post-nav-link">
+        <div class="tips">Next <i class="icon icon-angle-right icon-lg icon-pl"></i></div>
+        <h4 class="title">OpenCV两个Mat相减的隐藏秘密</h4>
+      </a>
+    </div>
+  
+</nav>
+
+
+
+    
+
+
+
+
+
+
+
+
+
+
+
+    <!-- Valine Comments -->
+    <div class="comments vcomment" id="comments"></div>
+    <script src="//cdn1.lncld.net/static/js/3.0.4/av-min.js"></script>
+    <script src="//unpkg.com/valine@latest/dist/Valine.min.js"></script>
+    <!-- Valine Comments script -->
+    <script>
+        var GUEST_INFO = ['nick','mail','link'];
+        var guest_info = 'nick,mail,link'.split(',').filter(function(item){
+          return GUEST_INFO.indexOf(item) > -1
+        });
+        new Valine({
+            el: '#comments',
+            notify: 'true' == 'true',
+            verify: 'false' == 'true',
+            appId: "uyWu5Aaztc1Kt6jeN5FUzdEe-gzGzoHsz",
+            appKey: "lKcy8vJsByFNTxKzJrLMSHaX",
+            avatar: "mm",
+            placeholder: "Just go go",
+            guest_info: guest_info.length == 0 ? GUEST_INFO : guest_info,
+            pageSize: "10"
+        })
+    </script>
+    <!-- Valine Comments end -->
+
+
+
+
+
+
+
+</article>
+
+<div id="reward" class="page-modal reward-lay">
+    <a class="close" href="javascript:;"><i class="icon icon-close"></i></a>
+    <h3 class="reward-title">
+        <i class="icon icon-quote-left"></i>
+        谢谢支持，你的打赏是我写出更多精品博客的动力~
+        <i class="icon icon-quote-right"></i>
+    </h3>
+    <div class="reward-content">
+        
+        <div class="reward-code">
+            <img id="rewardCode" src="/img/wechat.png" alt="打赏二维码">
+        </div>
+        
+        <label class="reward-toggle">
+            <input id="rewardToggle" type="checkbox" class="reward-toggle-check"
+                data-wechat="/img/wechat.png" data-alipay="/img/alipay.png">
+            <div class="reward-toggle-ctrol">
+                <span class="reward-toggle-item wechat">微信</span>
+                <span class="reward-toggle-label"></span>
+                <span class="reward-toggle-item alipay">支付宝</span>
+            </div>
+        </label>
+        
+    </div>
+</div>
+
+
+
+</div>
+
+        <footer class="footer">
+    <div class="top">
+        
+<p>
+    <span id="busuanzi_container_site_uv" style='display:none'>
+        站点总访客数：<span id="busuanzi_value_site_uv"></span>
+    </span>
+    <span id="busuanzi_container_site_pv" style='display:none'>
+        站点总访问量：<span id="busuanzi_value_site_pv"></span>
+    </span>
+</p>
+
+
+        <p>
+            
+                <span><a href="/atom.xml" target="_blank" class="rss" title="rss"><i class="icon icon-lg icon-rss"></i></a></span>
+            
+            <span>博客内容遵循 <a rel="license" href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.zh">知识共享 署名 - 非商业性 - 相同方式共享 4.0 国际协议</a></span>
+        </p>
+    </div>
+    <div class="bottom">
+        <p><span>天律界中子 &copy; 2018</span>
+            <span>
+                
+                Power by <a href="http://hexo.io/" target="_blank">Hexo</a> Theme <a href="https://github.com/yscoder/hexo-theme-indigo" target="_blank">indigo</a>
+            </span>
+        </p>
+    </div>
+</footer>
+
+    </main>
+    <div class="mask" id="mask"></div>
+<a href="javascript:;" id="gotop" class="waves-effect waves-circle waves-light"><span class="icon icon-lg icon-chevron-up"></span></a>
+
+
+
+<div class="global-share" id="globalShare">
+    <ul class="reset share-icons">
+      <li>
+        <a class="weibo share-sns" target="_blank" href="http://service.weibo.com/share/share.php?url=http://yoursite.com/2018/06/09/image-brightness-enhancement-based-on-haze-removal/&title=《基于快速去雾的图像亮度增强方法》 — 天律界&pic=http://yoursite.com/img/avatar.jpg" data-title="微博">
+          <i class="icon icon-weibo"></i>
+        </a>
+      </li>
+      <li>
+        <a class="weixin share-sns wxFab" href="javascript:;" data-title="微信">
+          <i class="icon icon-weixin"></i>
+        </a>
+      </li>
+      <li>
+        <a class="qq share-sns" target="_blank" href="http://connect.qq.com/widget/shareqq/index.html?url=http://yoursite.com/2018/06/09/image-brightness-enhancement-based-on-haze-removal/&title=《基于快速去雾的图像亮度增强方法》 — 天律界&source=天律界中子的Github page" data-title=" QQ">
+          <i class="icon icon-qq"></i>
+        </a>
+      </li>
+      <li>
+        <a class="facebook share-sns" target="_blank" href="https://www.facebook.com/sharer/sharer.php?u=http://yoursite.com/2018/06/09/image-brightness-enhancement-based-on-haze-removal/" data-title=" Facebook">
+          <i class="icon icon-facebook"></i>
+        </a>
+      </li>
+      <li>
+        <a class="twitter share-sns" target="_blank" href="https://twitter.com/intent/tweet?text=《基于快速去雾的图像亮度增强方法》 — 天律界&url=http://yoursite.com/2018/06/09/image-brightness-enhancement-based-on-haze-removal/&via=http://yoursite.com" data-title=" Twitter">
+          <i class="icon icon-twitter"></i>
+        </a>
+      </li>
+      <li>
+        <a class="google share-sns" target="_blank" href="https://plus.google.com/share?url=http://yoursite.com/2018/06/09/image-brightness-enhancement-based-on-haze-removal/" data-title=" Google+">
+          <i class="icon icon-google-plus"></i>
+        </a>
+      </li>
+    </ul>
+ </div>
+
+
+<div class="page-modal wx-share" id="wxShare">
+    <a class="close" href="javascript:;"><i class="icon icon-close"></i></a>
+    <p>扫一扫，分享到微信</p>
+    <img src="//api.qrserver.com/v1/create-qr-code/?data=http://yoursite.com/2018/06/09/image-brightness-enhancement-based-on-haze-removal/" alt="微信分享二维码">
+</div>
+
+
+
+
+    <script src="//cdn.bootcss.com/node-waves/0.7.4/waves.min.js"></script>
+<script>
+var BLOG = { ROOT: '/', SHARE: true, REWARD: true };
+
+
+</script>
+
+<script src="//unpkg.com/hexo-theme-material-indigo@latest/js/main.min.js"></script>
+
+
+<div class="search-panel" id="search-panel">
+    <ul class="search-result" id="search-result"></ul>
+</div>
+<template id="search-tpl">
+<li class="item">
+    <a href="{path}" class="waves-block waves-effect">
+        <div class="title ellipsis" title="{title}">{title}</div>
+        <div class="flex-row flex-middle">
+            <div class="tags ellipsis">
+                {tags}
+            </div>
+            <time class="flex-col time">{date}</time>
+        </div>
+    </a>
+</li>
+</template>
+
+<script src="//unpkg.com/hexo-theme-material-indigo@latest/js/search.min.js" async></script>
+
+
+
+<!-- mathjax config similar to math.stackexchange -->
+
+<script type="text/x-mathjax-config">
+MathJax.Hub.Config({
+    tex2jax: {
+        inlineMath: [ ['$','$'], ["\\(","\\)"]  ],
+        processEscapes: true,
+        skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+    }
+});
+
+MathJax.Hub.Queue(function() {
+    var all = MathJax.Hub.getAllJax(), i;
+    for(i=0; i < all.length; i += 1) {
+        all[i].SourceElement().parentNode.className += ' has-jax';
+    }
+});
+</script>
+
+<script async src="//cdn.bootcss.com/mathjax/2.7.0/MathJax.js?config=TeX-MML-AM_CHTML" async></script>
+
+
+
+
+<script async src="//dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+
+
+<script>
+(function() {
+    var OriginTitile = document.title, titleTime;
+    document.addEventListener('visibilitychange', function() {
+        if (document.hidden) {
+            document.title = '哇，页面崩溃了！';
+            clearTimeout(titleTime);
+        } else {
+            document.title = '(つェ⊂)咦!又好了!';
+            titleTime = setTimeout(function() {
+                document.title = OriginTitile;
+            },2000);
+        }
+    });
+})();
+</script>
+
+
+
+</body>
+</html>
