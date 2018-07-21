@@ -158,6 +158,54 @@
     <ul class="post-list">
     
         <li class="post-list-item fade">
+            <article id="post-opencl-trick-do-not-influence-render"
+  class="article-card article-type-post" itemprop="blogPost">
+
+    <div class="post-meta">
+        <time class="post-time" title="2018-07-21 23:02:35" datetime="2018-07-21T15:02:35.000Z"  itemprop="datePublished">2018-07-21</time>
+
+        
+	<ul class="article-category-list"><li class="article-category-list-item"><a class="article-category-list-link" href="/categories/OpenCL/">OpenCL</a></li></ul>
+
+
+
+    </div>
+
+    
+
+
+  
+    <h3 class="post-title" itemprop="name">
+      <a class="post-title-link" href="/2018/07/21/opencl-trick-do-not-influence-render/">一个小技巧使OpenCL不影响渲染</a>
+    </h3>
+  
+
+
+
+
+    <div class="post-content" id="post-content" itemprop="postContent">
+
+    
+        为了缩短算法在移动端的执行时间，有时我们会使用OpenCL来进行加速。OpenCL是基于命令队列的，也就是在主机端将所有要执行的命令放入队列，在设备端从队列中取出命令并执行。多数情况下，将命令放入队列只消耗极少的时间。这样一来，设备端就堆积了大量的命令需要执行，然后就会疯狂地消耗GPU资源，使得GPU资源被100%占用，造成的后果就是某些需要使用GPU进行渲染的程序严重卡顿，例如相机预览。
+...
+    
+
+        <a href="/2018/07/21/opencl-trick-do-not-influence-render/" class="post-more waves-effect waves-button">
+            阅读全文…
+        </a>
+    </div>
+    
+    <div class="post-footer">
+        
+	<ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/GPU/">GPU</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/OpenCL/">OpenCL</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/render/">render</a></li></ul>
+
+    </div>
+    
+</article>
+
+        </li>
+    
+        <li class="post-list-item fade">
             <article id="post-chroma-noise-reduction-with-guided-filter"
   class="article-card article-type-post" itemprop="blogPost">
 
@@ -611,55 +659,15 @@
 
         </li>
     
-        <li class="post-list-item fade">
-            <article id="post-hello-world"
-  class="article-card article-type-post" itemprop="blogPost">
-
-    <div class="post-meta">
-        <time class="post-time" title="2018-04-28 23:23:59" datetime="2018-04-28T15:23:59.783Z"  itemprop="datePublished">2018-04-28</time>
-
-        
-
-
-    </div>
-
-    
-
-
-  
-    <h3 class="post-title" itemprop="name">
-      <a class="post-title-link" href="/2018/04/28/hello-world/">Hello World</a>
-    </h3>
-  
-
-
-
-
-    <div class="post-content" id="post-content" itemprop="postContent">
-
-    
-        Welcome to Hexo! This is your very first post. Check documentation for more info. If you get any problems when using Hexo, you can find the answer in troubleshooting or you can ask me on GitHub.
-Qu...
-    
-
-        <a href="/2018/04/28/hello-world/" class="post-more waves-effect waves-button">
-            阅读全文…
-        </a>
-    </div>
-    
-    <div class="post-footer">
-        
-	<ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/hexo/">hexo</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/test/">test</a></li></ul>
-
-    </div>
-    
-</article>
-
-        </li>
-    
     </ul>
 
     
+<nav id="page-nav">
+    <div class="inner">
+    <span class="page-number current">1</span><a class="page-number" href="/page/2/">2</a><a class="extend next" rel="next" href="/page/2/">下一页</a>
+    </div>
+</nav>
+
 
 </div>
 
