@@ -6,7 +6,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="http://yoursite.com/"/>
-  <updated>2018-07-21T15:35:10.419Z</updated>
+  <updated>2018-08-21T14:07:43.915Z</updated>
   <id>http://yoursite.com/</id>
   
   <author>
@@ -15,6 +15,35 @@
   </author>
   
   <generator uri="http://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>YUV420中的stride</title>
+    <link href="http://yoursite.com/2018/08/21/stride-in-yuv420/"/>
+    <id>http://yoursite.com/2018/08/21/stride-in-yuv420/</id>
+    <published>2018-08-21T13:50:14.000Z</published>
+    <updated>2018-08-21T14:07:43.915Z</updated>
+    
+    <content type="html"><![CDATA[<p>一幅图像除了宽度和高度，有时还有stride，详情参见<a href="https://docs.microsoft.com/zh-cn/windows/desktop/medfound/image-stride" target="_blank" rel="noopener">Image Stride</a>。对于RGB图像，stride很好理解。但是对于YUV图像，由于Y、U、V三个通道的宽度和排列方式不同，所以stride的样子不是很直观。最近我在工作时就遇到了这个问题。经过一番搜索，我在libyuv中找到了答案。下面就分享我找到的YUV420中的stride的答案。</p><p>YUV420一般分为四种格式：<br><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br></pre></td><td class="code"><pre><span class="line"><span class="number">1.</span> I420</span><br><span class="line"></span><br><span class="line">   Y Y Y Y Y Y Y Y</span><br><span class="line">   Y Y Y Y Y Y Y Y</span><br><span class="line">   Y Y Y Y Y Y Y Y</span><br><span class="line">   Y Y Y Y Y Y Y Y</span><br><span class="line">   U U U U U U U U</span><br><span class="line">   V V V V V V V V</span><br><span class="line"></span><br><span class="line"><span class="number">2.</span> YV12</span><br><span class="line"></span><br><span class="line">   Y Y Y Y Y Y Y Y</span><br><span class="line">   Y Y Y Y Y Y Y Y</span><br><span class="line">   Y Y Y Y Y Y Y Y</span><br><span class="line">   Y Y Y Y Y Y Y Y</span><br><span class="line">   V V V V V V V V</span><br><span class="line">   U U U U U U U U</span><br><span class="line"></span><br><span class="line"><span class="number">3.</span> NV12</span><br><span class="line"></span><br><span class="line">   Y Y Y Y Y Y Y Y</span><br><span class="line">   Y Y Y Y Y Y Y Y</span><br><span class="line">   Y Y Y Y Y Y Y Y</span><br><span class="line">   Y Y Y Y Y Y Y Y</span><br><span class="line">   U V U V U V U V</span><br><span class="line">   U V U V U V U V</span><br><span class="line"></span><br><span class="line"><span class="number">4.</span> NV21</span><br><span class="line"></span><br><span class="line">   Y Y Y Y Y Y Y Y</span><br><span class="line">   Y Y Y Y Y Y Y Y</span><br><span class="line">   Y Y Y Y Y Y Y Y</span><br><span class="line">   Y Y Y Y Y Y Y Y</span><br><span class="line">   V U V U V U V U</span><br><span class="line">   V U V U V U V U</span><br></pre></td></tr></table></figure></p><p>可以看到，所有四种格式的Y通道排列是相同的。对于I420和YV12格式而言，它们的U和V通道都是分开排列的，所以这两种格式称为平面格式，即YUV420p（p，即planar）。而对于NV12和NV21格式而言，它们的U和V通道是交错排列的，所以这两种格式称为半平面格式，即YUV420sp（sp，即semi-planar）。</p><p>由于平面格式和半平面格式排列的不一致，stride的表现也就不一致。下面我就平面格式和半平面格式各举一例，来说明它们的stride的样子。以“-”表示由于stride大于图像宽度而添加的额外的空白像素。需要注意的是，没有“Y”、”U”、”V”或“-”的地方不代表任何像素。即：<br><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">Y Y - -</span><br><span class="line">Y Y - -</span><br><span class="line">U -</span><br><span class="line">V -</span><br></pre></td></tr></table></figure></p><p>在内存中的实际排列为：<br><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Y Y - - Y Y - - U - V -</span><br></pre></td></tr></table></figure></p><ol><li><p>I420</p><p>平面格式有：Y stride，U stride和V stride。</p><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">图像宽度：<span class="number">8</span></span><br><span class="line">图像高度：<span class="number">4</span></span><br><span class="line">Y stride: <span class="number">16</span></span><br><span class="line">U stride: <span class="number">6</span></span><br><span class="line">V stride: <span class="number">8</span></span><br><span class="line">Y Y Y Y Y Y Y Y - - - - - - - -</span><br><span class="line">Y Y Y Y Y Y Y Y - - - - - - - -</span><br><span class="line">Y Y Y Y Y Y Y Y - - - - - - - -</span><br><span class="line">Y Y Y Y Y Y Y Y - - - - - - - -</span><br><span class="line">U U U U - - U U U U - -</span><br><span class="line">V V V V - - - - V V V V - - - -</span><br></pre></td></tr></table></figure></li><li><p>NV12</p><p>半平面格式有：Y stride，UV stride。</p><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">图像宽度：<span class="number">8</span></span><br><span class="line">图像高度：<span class="number">4</span></span><br><span class="line">Y stride: <span class="number">16</span></span><br><span class="line">UV stride: <span class="number">12</span></span><br><span class="line">Y Y Y Y Y Y Y Y - - - - - - - -</span><br><span class="line">Y Y Y Y Y Y Y Y - - - - - - - -</span><br><span class="line">Y Y Y Y Y Y Y Y - - - - - - - -</span><br><span class="line">Y Y Y Y Y Y Y Y - - - - - - - -</span><br><span class="line">U V U V U V U V - - - -</span><br><span class="line">U V U V U V U V - - - -</span><br></pre></td></tr></table></figure></li></ol>]]></content>
+    
+    <summary type="html">
+    
+      
+      
+        &lt;p&gt;一幅图像除了宽度和高度，有时还有stride，详情参见&lt;a href=&quot;https://docs.microsoft.com/zh-cn/windows/desktop/medfound/image-stride&quot; target=&quot;_blank&quot; rel=&quot;noopener
+      
+    
+    </summary>
+    
+      <category term="图像处理" scheme="http://yoursite.com/categories/%E5%9B%BE%E5%83%8F%E5%A4%84%E7%90%86/"/>
+    
+    
+      <category term="image-processing" scheme="http://yoursite.com/tags/image-processing/"/>
+    
+      <category term="YUV" scheme="http://yoursite.com/tags/YUV/"/>
+    
+      <category term="stride" scheme="http://yoursite.com/tags/stride/"/>
+    
+  </entry>
   
   <entry>
     <title>一个小技巧使OpenCL不影响渲染</title>
