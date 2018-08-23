@@ -158,6 +158,54 @@
     <ul class="post-list">
     
         <li class="post-list-item fade">
+            <article id="post-conversion-between-yuv-and-rgb"
+  class="article-card article-type-post" itemprop="blogPost">
+
+    <div class="post-meta">
+        <time class="post-time" title="2018-08-23 23:02:45" datetime="2018-08-23T15:02:45.000Z"  itemprop="datePublished">2018-08-23</time>
+
+        
+	<ul class="article-category-list"><li class="article-category-list-item"><a class="article-category-list-link" href="/categories/图像处理/">图像处理</a></li></ul>
+
+
+
+    </div>
+
+    
+
+
+  
+    <h3 class="post-title" itemprop="name">
+      <a class="post-title-link" href="/2018/08/23/conversion-between-yuv-and-rgb/">YUV与RGB之间的转换公式推导</a>
+    </h3>
+  
+
+
+
+
+    <div class="post-content" id="post-content" itemprop="postContent">
+
+    
+        第一次接触YUV格式，是要把一张YUV420格式的图像转换为RGB格式。于是，我就上网去搜索YUV与RGB之间的转换公式。但是，看了几篇博客之后，我迷惑了：为什么有这么多不同的转换公式？到底哪个才是正确的呢？后来，我找到了一份相对来说比较权威的代码，然后使用了里面所用的转换公式，而那份疑惑也就深深埋于心底。
+前两天，我又遇到了YUV与RGB之间转换的问题。这次我决定，一定搞清楚问题的答案不可...
+    
+
+        <a href="/2018/08/23/conversion-between-yuv-and-rgb/" class="post-more waves-effect waves-button">
+            阅读全文…
+        </a>
+    </div>
+    
+    <div class="post-footer">
+        
+	<ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/YUV/">YUV</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/image-processing/">image-processing</a></li></ul>
+
+    </div>
+    
+</article>
+
+        </li>
+    
+        <li class="post-list-item fade">
             <article id="post-stride-in-yuv420"
   class="article-card article-type-post" itemprop="blogPost">
 
@@ -605,53 +653,6 @@ YUV420一般分为四种格式：12345678...
     <div class="post-footer">
         
 	<ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/OpenCV/">OpenCV</a></li></ul>
-
-    </div>
-    
-</article>
-
-        </li>
-    
-        <li class="post-list-item fade">
-            <article id="post-cpp-timer"
-  class="article-card article-type-post" itemprop="blogPost">
-
-    <div class="post-meta">
-        <time class="post-time" title="2018-06-05 22:26:41" datetime="2018-06-05T14:26:41.000Z"  itemprop="datePublished">2018-06-05</time>
-
-        
-	<ul class="article-category-list"><li class="article-category-list-item"><a class="article-category-list-link" href="/categories/C/">C++</a></li></ul>
-
-
-
-    </div>
-
-    
-
-
-  
-    <h3 class="post-title" itemprop="name">
-      <a class="post-title-link" href="/2018/06/05/cpp-timer/">C++11高精度计时器</a>
-    </h3>
-  
-
-
-
-
-    <div class="post-content" id="post-content" itemprop="postContent">
-
-    
-        做图像处理算法时，免不了要测量函数的运行时间。以前我都是使用OpenCV的计时函数cv::getTickCount()和cv::getTickFrequency()，但是这样一来，在不使用OpenCV的项目中就没法用了。幸好C++11增加了std::chrono库，可以很方便地实现跨平台的时间测量。于是我封装了一个简单的计时器类，这样只要将其简单地添加到项目中，就可以直接使用了。此计时器单位...
-    
-
-        <a href="/2018/06/05/cpp-timer/" class="post-more waves-effect waves-button">
-            阅读全文…
-        </a>
-    </div>
-    
-    <div class="post-footer">
-        
-	<ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/C/">C++</a></li></ul>
 
     </div>
     
