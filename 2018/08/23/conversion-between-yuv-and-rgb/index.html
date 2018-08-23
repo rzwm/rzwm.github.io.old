@@ -29,7 +29,7 @@
 <meta property="og:site_name" content="天律界">
 <meta property="og:description" content="第一次接触YUV格式，是要把一张YUV420格式的图像转换为RGB格式。于是，我就上网去搜索YUV与RGB之间的转换公式。但是，看了几篇博客之后，我迷惑了：为什么有这么多不同的转换公式？到底哪个才是正确的呢？后来，我找到了一份相对来说比较权威的代码，然后使用了里面所用的转换公式，而那份疑惑也就深深埋于心底。 前两天，我又遇到了YUV与RGB之间转换的问题。这次我决定，一定搞清楚问题的答案不可，于是">
 <meta property="og:locale" content="zh-CN">
-<meta property="og:updated_time" content="2018-08-23T16:10:32.700Z">
+<meta property="og:updated_time" content="2018-08-23T16:36:21.264Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="YUV与RGB之间的转换公式推导">
 <meta name="twitter:description" content="第一次接触YUV格式，是要把一张YUV420格式的图像转换为RGB格式。于是，我就上网去搜索YUV与RGB之间的转换公式。但是，看了几篇博客之后，我迷惑了：为什么有这么多不同的转换公式？到底哪个才是正确的呢？后来，我找到了一份相对来说比较权威的代码，然后使用了里面所用的转换公式，而那份疑惑也就深深埋于心底。 前两天，我又遇到了YUV与RGB之间转换的问题。这次我决定，一定搞清楚问题的答案不可，于是">
@@ -223,7 +223,7 @@
 <p>将这五个值代入上述公式，就可以得到具体的转换公式了。</p>
 <p>这样一来，我们就有了六个公式。大多数的博客所提出的公式都逃不出这个范围（包括下面的定点化）。不信你可以去对照一下。</p>
 <h1 id="定点化"><a href="#定点化" class="headerlink" title="定点化"></a>定点化</h1><p>可以看到，上述六个公式的系数一般都是浮点数。而浮点数在运算时，速度一般没有定点数快。所以，常用的处理是将所有系数乘以一个常数，从而转化为定点数来运算，最后再将结果除以此常数。为了优化最后除以常数的运算，一般选取此常数为2的次幂，这样就可以将除法运算转化为位移运算。此常数一般选取256或16384等。显然，定点化会使转换结果有一定的精度损失，而此常数越大，精度损失就越小。</p>
-<h1 id="公式生成器"><a href="#公式生成器" class="headerlink" title="公式生成器"></a>公式生成器</h1><p>根据上述原理，我写了一个简单的公式生成器。Github地址：<a href="https://github.com/rzwm/YUVRGBFormulaGenerator。你可以下载此代码，然后生成自己想要的转换公式。" target="_blank" rel="noopener">https://github.com/rzwm/YUVRGBFormulaGenerator。你可以下载此代码，然后生成自己想要的转换公式。</a></p>
+<h1 id="公式生成器"><a href="#公式生成器" class="headerlink" title="公式生成器"></a>公式生成器</h1><p>根据上述原理，我写了一个简单的公式生成器。Github地址：<a href="https://github.com/rzwm/YUVRGBFormulaGenerator" target="_blank" rel="noopener">YUVRGBFormulaGenerator</a>。你可以下载此代码，然后生成自己想要的转换公式。</p>
 <h1 id="具体转换公式"><a href="#具体转换公式" class="headerlink" title="具体转换公式"></a>具体转换公式</h1><p>下面我将我推导出的具体的转换公式贴出来，供大家参考。</p>
 <h2 id="BT-601"><a href="#BT-601" class="headerlink" title="BT.601"></a>BT.601</h2><h3 id="常数"><a href="#常数" class="headerlink" title="常数"></a>常数</h3><p>$W_R = 0.299, W_G = 0.587, W_B = 0.114, U_{max} = 0.436, V_{max} = 0.615$</p>
 <h3 id="根公式"><a href="#根公式" class="headerlink" title="根公式"></a>根公式</h3><p>$Y = 0.299R + 0.587G + 0.114B$<br>$U = -0.14714R - 0.28886G + 0.436B$<br>$V = 0.615R - 0.51499G - 0.10001B$<br>$R = Y + 1.13984V$<br>$B = Y - 0.39465U - 0.58060V$<br>$B = Y + 2.03211U$</p>
@@ -241,7 +241,7 @@
     <div class="content">
         
 <span class="post-time">
-    最后更新时间：<time datetime="2018-08-23T16:10:32.700Z" itemprop="dateUpdated">2018-08-24 00:10:32</time>
+    最后更新时间：<time datetime="2018-08-23T16:36:21.264Z" itemprop="dateUpdated">2018-08-24 00:36:21</time>
 </span><br>
 
 
